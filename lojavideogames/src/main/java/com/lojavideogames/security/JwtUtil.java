@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @Component
 public class JwtUtil {
 
@@ -29,7 +28,6 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userDetails.getUsername());
     }
-
 
     // Criar o token JWT
     private String createToken(Map<String, Object> claims, String subject) {
@@ -67,3 +65,4 @@ public class JwtUtil {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 }
+

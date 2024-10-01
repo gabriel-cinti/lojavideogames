@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Atualizado para a versão 6.1
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/authenticate").permitAll() // Endpoint de autenticação aberto
                 .anyRequest().authenticated())
@@ -49,3 +49,4 @@ public class SecurityConfig {
         return auth.build();
     }
 }
+
