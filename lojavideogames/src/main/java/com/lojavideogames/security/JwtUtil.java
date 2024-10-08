@@ -3,25 +3,25 @@ package com.lojavideogames.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class JwtUtil {
+	
+	 private SecretKey signingKey;
 
-    // A chave secreta deve ter no mínimo 256 bits (32 caracteres) para HMAC-SHA256
-    private static final String SECRET_KEY = "secreta_secreta_secreta_secreta"; 
-
-    // Gerar chave com base no SECRET_KEY
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    }
+	 // Gera uma chave segura com 256 bits
+	public void generateSigningKey() {
+	    this.signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+	}
 
     // Gerar o token JWT com base nos dados fornecidos
     public String generateToken(UserDetails userDetails) {
@@ -31,19 +31,23 @@ public class JwtUtil {
 
     // Criar o token JWT
     private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
+    	if (signingKey == null) {
+            throw new IllegalStateException("Signing key has not been initialized.");
+        }
+    	
+    	return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Token válido por 10 horas
-                .signWith(getSigningKey())
+                .signWith(signingKey)
                 .compact();
     }
 
     // Extrair todos os claims do token JWT
     public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())  // Aqui está a chave
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -51,10 +55,11 @@ public class JwtUtil {
 
     // Extrair o username do token JWT
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+        Claims claims = extractAllClaims(token);
+        return claims.getSubject();
     }
 
-    // Validar o token JWT
+
     public boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
